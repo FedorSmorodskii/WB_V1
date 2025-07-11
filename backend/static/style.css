@@ -109,3 +109,43 @@ body {
   background: linear-gradient(var(--primary), var(--secondary));
   border-radius: 4px;
 }
+
+.price-input-container {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.price-input-container label {
+  display: block;
+  margin-bottom: 5px;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.price-input-wrapper {
+  position: relative;
+}
+
+.price-input-wrapper::after {
+  content: "\f158";
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  z-index: 2;
+}
+
+.price-input {
+  width: 100%;
+  padding: 12px 35px 12px 15px;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.price-input:focus {
+  border-color: #6c0;
+  outline: none;
+}

@@ -15,10 +15,16 @@ class BaseSpider(scrapy.Spider):
         'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
 
-    def __init__(self, queries=None, *args, **kwargs):
+    def __init__(self, queries=None, min_price=None, max_price=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.base_url = "https://search.wb.ru/exactmatch/ru/common/v13/search"
         self.queries = [q.strip() for q in queries.split(',')] if queries else []
+
+        # Преобразуем рубли в копейки и формируем priceU
+        if min_price is not None and max_price is not None:
+            self.price_range = f"{int(float(min_price) * 100)};{int(float(max_price) * 100)}"
+        else:
+            self.price_range = None
 
     def start_requests(self):
         for query in self.queries:
@@ -41,15 +47,17 @@ class BaseSpider(scrapy.Spider):
             'lang': 'ru',
             'locale': 'ru',
             'page': page,
-            'query': f'{{{query}}}',  # Wrap the query in curly braces
+            'query': f'{{{query}}}',
             'resultset': 'catalog',
             'sort': 'popular',
             'spp': 30,
             'suppressSpellcheck': 'false',
         }
-        # Костыль: добавляем hide_dtype после формирования основного URL
+
+        if self.price_range:
+            params['priceU'] = self.price_range
+
         base_url = f"{self.base_url}?{urlencode(params)}"
-        # Вставляем hide_dtype после 4-го параметра
         parts = base_url.split('&', 4)
         return '&'.join(parts[:4] + ['hide_dtype=13'] + parts[4:])
 

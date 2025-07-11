@@ -25,7 +25,52 @@
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
-    </style>
+  .price-input-wrapper {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  .price-input-wrapper::before {
+    content: "₽";
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-weight: bold;
+    z-index: 2;
+  }
+  .form-control {
+    background-color: #2a2a2a !important;
+    color: white !important;
+    border: 1px solid #444 !important;
+  }
+  .form-control::placeholder {
+    color: #8e8e8e !important;
+  }
+  .form-control:focus {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+  }
+  .form-control:focus::placeholder {
+    color: transparent;
+  }
+  .form-select {
+    background-color: #2a2a2a !important;
+    color: #eee !important;
+    border: 1px solid #444 !important;
+    }
+    .form-select:focus {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    color: #fff !important;
+    }
+    .text-white-50 {
+    color: rgba(255, 255, 255, 0.7) !important;
+    }
+    .text-white-50:hover {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+  </style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Результаты поиска | WB Parser Pro</title>
@@ -40,25 +85,58 @@
 
       <form action="/search" method="post">
         <div class="mb-3">
-          <input type="text" name="query" class="form-control bg-dark text-white border-0 py-3"
+          <input type="text" name="query" class="form-control py-3"
                  placeholder="Введите запрос (например, 'ноутбук')" required>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <select name="category" class="form-select py-3">
+              <option value="">Все категории</option>
+              <option value="elektronika">Электроника</option>
+              <option value="kompyutery">Компьютеры</option>
+              <option value="smartfony">Смартфоны</option>
+              <option value="bytovaya-tekhnika">Бытовая техника</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <select name="limit" class="form-select py-3">
+              <option value="10">10 товаров</option>
+              <option value="20">20 товаров</option>
+              <option value="50">50 товаров</option>
+              <option value="100">100 товаров</option>
+            </select>
+          </div>
         </div>
 
         <div class="row g-3 mb-4">
           <div class="col-md-6">
-            <select name="category" class="form-select bg-dark text-white border-0 py-3">
-              <option value="">Все категории</option>
-              <option value="elektronika">Электроника</option>
-              <option value="kompyutery">Компьютеры</option>
-            </select>
+            <div class="price-input-wrapper">
+              <input type="number" id="min_price" name="min_price"
+                     class="form-control py-3"
+                     placeholder="Минимальная цена"
+                     min="0"
+                     step="100">
+            </div>
           </div>
           <div class="col-md-6">
-            <select name="limit" class="form-select bg-dark text-white border-0 py-3">
-              <option value="12">12 товаров</option>
-              <option value="24">24 товара</option>
-              <option value="48">48 товаров</option>
-            </select>
+            <div class="price-input-wrapper">
+              <input type="number" id="max_price" name="max_price"
+                     class="form-control py-3"
+                     placeholder="Максимальная цена"
+                     min="0"
+                     step="100">
+            </div>
           </div>
+        </div>
+
+        <div class="mb-3">
+          <select name="pages" class="form-select py-3">
+            <option value="1">1 страница</option>
+            <option value="2">2 страницы</option>
+            <option value="3">3 страницы</option>
+            <option value="5">5 страниц</option>
+          </select>
         </div>
 
         <button type="submit" class="btn btn-neon w-100 py-3 fs-5">
@@ -71,5 +149,21 @@
       </div>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const inputs = document.querySelectorAll('.form-control');
+
+      inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+          this.parentElement.querySelector('::before')?.style.color = '#0d6efd';
+        });
+
+        input.addEventListener('blur', function() {
+          this.parentElement.querySelector('::before')?.style.color = '#6c757d';
+        });
+      });
+    });
+  </script>
 </body>
 </html>
