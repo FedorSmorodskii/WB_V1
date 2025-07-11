@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WB Parser Pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      background: #0f0f1a;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+    }
+    .price-highlight {
+      color: #6e00ff;
+      font-weight: bold;
+    }
+    /* Новые стили для названия товара */
+    .product-name {
+      color: #e0e0ff; /* Светло-голубой цвет для названия */
+      margin-bottom: 0.5rem;
+    }
+    /* Новые стили для старой цены */
+    .old-price {
+      color: #ff6b6b; /* Красный цвет для старой цены */
+      text-decoration-line: line-through;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="d-flex justify-content-between align-items-center mb-4">
+      <h1>WB Parser <span class="text-warning">Pro</span></h1>
+      <div>
+        <a href="/" class="btn btn-primary me-2">Новый поиск</a>
+        <a href="/history" class="btn btn-outline-light">История</a>
+      </div>
+    </header>
+
+    <div class="search-results mb-4">
+      <h2 class="h4 mb-3">Результаты поиска</h2>
+      <div class="alert alert-dark mb-3">
+        По запросу <strong>"{{ query }}"</strong> найдено <strong>{{ products|length }}</strong> товаров
+      </div>
+
+      <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for product in products %}
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between mb-2">
+                <span class="badge bg-dark">{{ product.brand or 'Без бренда' }}</span>
+                <span class="badge bg-warning text-dark">
+                  ★ {{ product.rating|default('?') }}
+                </span>
+              </div>
+
+              <h3 class="h5 product-name">{{ product.name }}</h3>
+
+              <div class="my-3">
+                <span class="price-highlight fs-4">{{ product.price }} ₽</span>
+                {% if product.sale_price and product.sale_price != product.price %}
+                <span class="old-price ms-2">
+                  {{ product.sale_price }} ₽
+                </span>
+                {% endif %}
+              </div>
+
+              <a href="{{ product.url }}" target="_blank" class="btn btn-sm btn-primary">
+                Открыть на WB
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <footer class="mt-4 text-center text-muted">
+      <p>WB Parser Pro © {{ now().strftime('%Y') }}</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+:root {
+  --primary: #6e00ff;
+  --secondary: #ff00aa;
+  --dark: #0f0f1a;
+  --light: #f8f9fa;
+  --glass: rgba(255, 255, 255, 0.15);
+}
+
+body {
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  color: white;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* Глассморфизм */
+.glass-card {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Неоновые элементы */
+.neon-text {
+  text-shadow: 0 0 8px rgba(110, 0, 255, 0.7);
+}
+.neon-border {
+  box-shadow: 0 0 15px rgba(110, 0, 255, 0.5);
+}
+
+/* Анимации */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.03);
+}
+
+/* Кнопки */
+.btn-neon {
+  background: linear-gradient(45deg, var(--primary), var(--secondary));
+  border: none;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-neon::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255,255,255,0.3) 0%,
+    rgba(255,255,255,0) 60%
+  );
+  transform: rotate(30deg);
+  transition: all 0.3s ease;
+}
+
+.btn-neon:hover::after {
+  left: 100%;
+}
+
+/* Карточка товара */
+.product-card {
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.product-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(110, 0, 255, 0.3);
+}
+
+.price-badge {
+  background: linear-gradient(45deg, #ff00aa, #6e00ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+/* Кастомный скролл */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--dark);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--primary), var(--secondary));
+  border-radius: 4px;
+}

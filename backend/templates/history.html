@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>История поиска | WB Parser Pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #0f0f1a;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+    .table {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .table th {
+      background: rgba(255, 255, 255, 0.1);
+      color: #6e00ff;
+      font-weight: 600;
+    }
+    .table td {
+      border-color: rgba(255, 255, 255, 0.1);
+      vertical-align: middle;
+    }
+    .table-hover tbody tr:hover {
+      background-color: rgba(110, 0, 255, 0.1);
+    }
+    .btn-outline-light {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .badge-purple {
+      background-color: rgba(110, 0, 255, 0.2);
+      color: #b47aff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="d-flex justify-content-between align-items-center mb-4">
+      <h1>История поиска <span class="text-warning">WB Parser Pro</span></h1>
+      <div>
+        <a href="/" class="btn btn-primary me-2">Новый поиск</a>
+        <a href="/history" class="btn btn-outline-light active">История</a>
+      </div>
+    </header>
+
+    <div class="card mb-4 border-0" style="color: #6e00ff;background: rgba(255, 255, 255, 0.05);">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h4 mb-0">Сохранённые запросы</h2>
+          <span class="badge badge-purple">{{ searches|length }} запросов</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Запрос</th>
+                <th>Категория</th>
+                <th>Лимит</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for search in searches %}
+              <tr>
+                <td>{{ search.search_date.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>
+                  <strong>{{ search.query }}</strong>
+                  {% if search.query|length > 30 %}
+                    <span class="text-muted" title="{{ search.query }}">...</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge bg-dark">{{ search.category or 'Все' }}</span>
+                </td>
+                <td>
+                  <span class="badge bg-secondary">{{ search.items_count }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-4 text-center text-muted">
+      <!-- Исправлено: убрана функция now() -->
+      <p>WB Parser Pro © 2025</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
