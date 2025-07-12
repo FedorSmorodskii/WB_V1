@@ -13,7 +13,6 @@ body {
   min-height: 100vh;
 }
 
-/* Глассморфизм */
 .glass-card {
   background: var(--glass);
   backdrop-filter: blur(12px);
@@ -25,7 +24,6 @@ body {
   transition: all 0.3s ease;
 }
 
-/* Неоновые элементы */
 .neon-text {
   text-shadow: 0 0 8px rgba(110, 0, 255, 0.7);
 }
@@ -33,7 +31,6 @@ body {
   box-shadow: 0 0 15px rgba(110, 0, 255, 0.5);
 }
 
-/* Анимации */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -50,7 +47,6 @@ body {
   transform: scale(1.03);
 }
 
-/* Кнопки */
 .btn-neon {
   background: linear-gradient(45deg, var(--primary), var(--secondary));
   border: none;
@@ -79,7 +75,6 @@ body {
   left: 100%;
 }
 
-/* Карточка товара */
 .product-card {
   border-radius: 16px;
   overflow: hidden;
@@ -98,7 +93,6 @@ body {
   font-weight: 800;
 }
 
-/* Кастомный скролл */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -148,4 +142,43 @@ body {
 .price-input:focus {
   border-color: #6c0;
   outline: none;
+}
+
+/* Новые стили для кнопок */
+.btn-pink {
+  background-color: #ff00aa;
+  border-color: #ff00aa;
+  color: white;
+}
+
+.btn-pink:hover {
+  background-color: #e00099;
+  border-color: #e00099;
+  color: white;
+}
+
+.btn-blue {
+  background-color: #6e00ff;
+  border-color: #6e00ff;
+  color: white;
+}
+
+.btn-blue:hover {
+  background-color: #5c00d6;
+  border-color: #5c00d6;
+  color: white;
+}
+
+/* Для текста характеристик */
+.spec-item span {
+  color: white !important;
+}
+
+.text-muted {
+  color: #ccc !important;
+}
+
+.description-text {
+  color: #e0e0ff;
+  line-height: 1.6;
 }

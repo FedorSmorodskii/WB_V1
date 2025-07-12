@@ -58,17 +58,49 @@
     background-color: #2a2a2a !important;
     color: #eee !important;
     border: 1px solid #444 !important;
-    }
-    .form-select:focus {
+  }
+  .form-select:focus {
     border-color: #0d6efd !important;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
     color: #fff !important;
-    }
-    .text-white-50 {
+  }
+  .text-white-50 {
     color: rgba(255, 255, 255, 0.7) !important;
-    }
-    .text-white-50:hover {
+  }
+  .text-white-50:hover {
     color: rgba(255, 255, 255, 0.9) !important;
+  }
+  .author-badge {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(40, 40, 40, 0.8);
+    color: #ffc107;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    z-index: 1000;
+    animation: fadeIn 0.5s ease-out;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+  }
+  .author-badge:hover {
+    background: rgba(60, 60, 60, 0.9);
+    color: #ffd700;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  .author-badge:active {
+    transform: translateY(0);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   </style>
   <meta charset="UTF-8">
@@ -79,6 +111,11 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  <!-- Плашка с именем -->
+  <a href="https://github.com/FedorSmorodskii" class="author-badge" target="_blank" rel="noopener noreferrer">
+    @FedorSmorodskii
+  </a>
+
   <div class="container d-flex flex-column justify-content-center" style="min-height: 100vh;">
     <div class="glass-card p-5 mx-auto" style="max-width: 600px;">
       <h1 class="neon-text text-center mb-4">WB Parser <span class="text-warning">Pro</span></h1>

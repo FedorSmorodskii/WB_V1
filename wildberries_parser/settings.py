@@ -1,4 +1,6 @@
 # Добавьте/измените в settings.py
+from pathlib import Path
+
 BOT_NAME = 'wildberries_parser'
 
 SPIDER_MODULES = ['wildberries_parser.spiders']
@@ -14,7 +16,7 @@ DOWNLOAD_DELAY = 1
 DOWNLOAD_TIMEOUT = 30
 
 FEED_FORMAT = 'json'
-FEED_URI = '/home/fedor/PycharmProjects/WB_V1/scrapy_data/data.json'
+FEED_URI = str(Path(__file__).parent.parent / 'scrapy_data' / 'data.json')
 FEED_EXPORT_ENCODING = 'utf-8'
 
 # Настройки кеширования (отключено для отладки)
