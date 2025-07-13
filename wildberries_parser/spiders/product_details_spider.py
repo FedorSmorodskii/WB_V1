@@ -11,7 +11,9 @@ class WildberriesProductDetailsSpider(scrapy.Spider):
         },
         'DOWNLOAD_TIMEOUT': 30,
         'RETRY_TIMES': 5,
-        'RETRY_HTTP_CODES': [500, 502, 503, 504, 408, 429, 404]
+        'RETRY_HTTP_CODES': [500, 502, 503, 504, 408, 429, 404],
+        'CONCURRENT_REQUESTS': 16,  # Оптимальное количество параллельных запросов
+        'DOWNLOAD_DELAY': 0.1,  # Небольшая задержка между запросами
     }
 
     def __init__(self, product_ids=None, *args, **kwargs):

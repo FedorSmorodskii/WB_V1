@@ -13,8 +13,8 @@ class WildberriesSpider(BaseSpider):
     custom_settings = {
         'RETRY_TIMES': 3,
         'DOWNLOAD_TIMEOUT': 15,
-        'CONCURRENT_REQUESTS': 4,
-        'DOWNLOAD_DELAY': 1,
+        'CONCURRENT_REQUESTS': 16,  # Оптимальное количество параллельных запросов
+        'DOWNLOAD_DELAY': 0.1,  # Небольшая задержка между запросами
     }
 
     def __init__(self, queries=None, categories=None, pages=1, limit=100,

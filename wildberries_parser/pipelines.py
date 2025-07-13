@@ -1,46 +1,26 @@
 import logging
 from datetime import datetime
-
+from pathlib import Path
+from scrapy.pipelines.images import ImagesPipeline
+from scrapy import Request
 from itemadapter import ItemAdapter
-
-from wildberries_parser.items import WildberriesProductDetailsItem
-
 
 class WildberriesPipeline:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.stats = {
-            'processed': 0,
-            'failed': 0,
-            'processed_details': 0
-        }
 
-    def process_item(self, item, spider):
-        try:
-            # Добавляем timestamp
-            item['timestamp'] = datetime.utcnow().isoformat()
+    # def process_item(self, item, spider):
+    #     item['timestamp'] = datetime.utcnow().isoformat()
+    #     return item
 
-            # Если есть ошибка, логируем но пропускаем item
-            if 'error' in item:
-                spider.logger.warning(f"Item with error: {item['error']}")
-                return item
+class WildberriesPhotosPipeline(ImagesPipeline):
+    def get_media_requests(self, item, info):
+        if 'image_url' in item:
+            yield Request(item['image_url'], meta={'product_id': item['product_id']})
 
-            # Проверяем минимально необходимые поля
-            if not item.get('product_id'):
-                raise ValueError("Missing product_id")
-
-            return item
-
-        except Exception as e:
-            spider.logger.error(f"Pipeline error: {str(e)}")
-            item['error'] = str(e)
-            return item
+    def file_path(self, request, response=None, info=None, *, item=None):
+        product_id = request.meta['product_id']
+        image_name = request.url.split('/')[-1]
+        return f'{product_id}/{image_name}'
 
 
-    def close_spider(self, spider):
-        """Действия при закрытии паука"""
-        spider.logger.info(
-            f"Pipeline stats - Products: {self.stats['processed']}, "
-            f"Product details: {self.stats['processed_details']}, "
-            f"Failed: {self.stats['failed']}"
-        )

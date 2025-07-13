@@ -1,3 +1,4 @@
+import glob
 from datetime import datetime
 import os
 import time
@@ -34,6 +35,14 @@ SCRAPY_DATA_DIR.mkdir(exist_ok=True)  # Создаем директорию, е�
 def get_scrapy_data_path(filename: str) -> str:
     """Возвращает полный путь к файлу в директории scrapy_data"""
     return str(SCRAPY_DATA_DIR / filename)
+
+def get_scrapy_full_path(filename: str, subdir: str = "") -> str:
+    """Возвращает полный путь к файлу в директории scrapy_data"""
+    path = SCRAPY_DATA_DIR
+    if subdir:
+        path = path / subdir
+        path.mkdir(exist_ok=True)  # Создаем поддиректорию, если ее нет
+    return str(path / filename)
 
 @app.get("/")
 async def home(request: Request):
@@ -174,20 +183,91 @@ from fastapi import BackgroundTasks
 import asyncio
 
 
-@app.get("/product/{product_id}")
-async def product_details(request: Request, product_id: int):
+async def _fetch_product_photos(product_id: int):
+    """Запуск паука для получения фотографий товара"""
+    photos_dir = "photos"
+    output_file = get_scrapy_full_path(f"photos_{product_id}.json", photos_dir)
+
     try:
-        # 1. Ищем базовые данные в data.json
+        # Создаем директорию photos, если ее нет
+        (SCRAPY_DATA_DIR / photos_dir).mkdir(exist_ok=True)
+
+        # Удаляем старый файл, если он существует
+        if os.path.exists(output_file):
+            os.remove(output_file)
+
+        process = subprocess.run(
+            [
+                "scrapy", "crawl", "wb_product_photos",
+                "-a", f"product_id={product_id}",
+                "-O", output_file,  # Используем -O для перезаписи
+                "--loglevel", "ERROR"
+            ],
+            cwd=str(PROJECT_ROOT),
+            timeout=120,
+            capture_output=True,
+            text=True
+        )
+
+        if process.returncode == 0 and os.path.exists(output_file):
+            with open(output_file, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                # Очищаем JSON
+                last_valid_bracket = content.rfind(']')
+                if last_valid_bracket > 0:
+                    content = content[:last_valid_bracket + 1]
+
+                lines = [line for line in content.split('\n')
+                         if '"timestamp"' not in line and line.strip()]
+                cleaned_content = '\n'.join(lines)
+
+                try:
+                    data = json.loads(cleaned_content)
+                    if isinstance(data, list):
+                        # Удаляем дубликаты
+                        unique_photos = []
+                        seen_urls = set()
+                        for photo in data:
+                            if isinstance(photo, dict) and 'image_url' in photo:
+                                if photo['image_url'] not in seen_urls:
+                                    seen_urls.add(photo['image_url'])
+                                    unique_photos.append(photo)
+                        return unique_photos
+                except json.JSONDecodeError:
+                    logger.error("Failed to parse photos JSON")
+    except Exception as e:
+        logger.error(f"Photos spider failed: {str(e)}")
+    return []
+
+
+@app.get("/product/{product_id}")
+async def product_details(request: Request, product_id: int, background_tasks: BackgroundTasks):
+    try:
+        # 1. Get base data
         base_data = find_product_in_data(product_id) or {}
         base_data['product_id'] = product_id
         base_data['url'] = f"https://www.wildberries.ru/catalog/{product_id}/detail.aspx"
 
-        # 2. Пробуем получить детали через API
+        # 2. Try to get details via direct API
         api_data = await _fetch_direct_api(product_id)
         if api_data:
             base_data.update(api_data)
 
-        # 3. Добавляем данные из cookies
+        # 3. If no characteristics found, run Scrapy spider in background
+        if not base_data.get('options') and not base_data.get('grouped_options'):
+            background_tasks.add_task(_fetch_via_scrapy, product_id)
+
+        # 4. Start photos parsing in background
+        background_tasks.add_task(_fetch_product_photos, product_id)
+
+        # 5. Check if there are already saved photos
+        photos_dir = "photos"
+        photos_file = get_scrapy_full_path(f"photos_{product_id}.json", photos_dir)
+        if os.path.exists(photos_file):
+            with open(photos_file, "r", encoding="utf-8") as f:
+                base_data['photos'] = json.load(f)
+
+        # 6. Add cookie data if exists
         if cookie_data := request.cookies.get(f"product_{product_id}"):
             try:
                 base_data.update(json.loads(cookie_data))
@@ -312,3 +392,249 @@ def find_product_in_data(product_id: int):
         logger.error(f"Error reading data.json: {str(e)}")
 
     return None
+
+
+@app.get("/api/product_photos/{product_id}")
+async def get_product_photos(product_id: int):
+    photos_file = get_scrapy_data_path(f"photos_{product_id}.json")
+
+    if not os.path.exists(photos_file):
+        return JSONResponse({"photos": []}, status_code=404)
+
+    try:
+        with open(photos_file, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+
+            # Обрабатываем разные форматы JSON
+            if content.startswith('[') and content.endswith(']'):
+                # Это массив объектов
+                return {"photos": json.loads(content)}
+            elif content.startswith('{') and content.endswith('}'):
+                # Это один объект
+                data = json.loads(content)
+                return {"photos": [data] if isinstance(data, dict) else data}
+            else:
+                # Это несколько JSON объектов (по одному на строку)
+                photos = []
+                for line in content.split('\n'):
+                    if line.strip():
+                        photos.append(json.loads(line))
+                return {"photos": photos}
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse JSON file {photos_file}: {str(e)}")
+        return JSONResponse(
+            {"error": "Invalid photo data format", "details": str(e)},
+            status_code=500
+        )
+    except Exception as e:
+        logger.error(f"Error reading photo file: {str(e)}")
+        return JSONResponse(
+            {"error": "Failed to read photo data", "details": str(e)},
+            status_code=500
+        )
+
+
+@app.get("/product/{product_id}/photos")
+async def get_product_photos(product_id: int):
+    """Получает фотографии товара, запуская паука при необходимости"""
+    photos_dir = "photos"
+    photos_file = f"photos_{product_id}.json"
+    photos_path = get_scrapy_full_path(photos_file, photos_dir)
+
+    # Если файл не существует или старше 5 минут - запускаем паука
+    if not os.path.exists(photos_path) or (time.time() - os.path.getmtime(photos_path)) > 300:
+        try:
+            # Создаем директорию photos, если ее нет
+            (SCRAPY_DATA_DIR / photos_dir).mkdir(exist_ok=True)
+
+            # Удаляем старый файл, если он существует
+            if os.path.exists(photos_path):
+                os.remove(photos_path)
+
+            process = subprocess.run(
+                [
+                    "scrapy", "crawl", "wb_product_photos",
+                    "-a", f"product_id={product_id}",
+                    "-O", photos_path,  # Используем -O вместо -o для перезаписи файла
+                    "--loglevel", "ERROR"
+                ],
+                cwd=str(PROJECT_ROOT),
+                timeout=120,
+                capture_output=True,
+                text=True
+            )
+
+            if process.returncode != 0:
+                logger.error(f"Scrapy failed: {process.stderr}")
+                return {"photos": [], "error": "Failed to fetch photos"}
+        except Exception as e:
+            logger.error(f"Error running spider: {str(e)}")
+            return {"photos": [], "error": str(e)}
+
+    # Читаем и валидируем JSON
+    if os.path.exists(photos_path):
+        try:
+            with open(photos_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+
+                # Удаляем все после последнего корректного закрытия массива
+                last_valid_bracket = content.rfind(']')
+                if last_valid_bracket > 0:
+                    content = content[:last_valid_bracket + 1]
+
+                # Удаляем все строки с timestamp
+                lines = [line for line in content.split('\n')
+                         if '"timestamp"' not in line and line.strip()]
+                cleaned_content = '\n'.join(lines)
+
+                try:
+                    data = json.loads(cleaned_content)
+                    if isinstance(data, list):
+                        # Удаляем дубликаты по image_url
+                        unique_photos = []
+                        seen_urls = set()
+                        for photo in data:
+                            if isinstance(photo, dict) and 'image_url' in photo:
+                                if photo['image_url'] not in seen_urls:
+                                    seen_urls.add(photo['image_url'])
+                                    unique_photos.append(photo)
+                        return {"photos": unique_photos}
+                    return {"photos": []}
+                except json.JSONDecodeError as e:
+                    logger.error(f"Invalid JSON in photo file: {str(e)}")
+                    return {"photos": [], "error": "Invalid photo data format"}
+        except Exception as e:
+            logger.error(f"Error reading photos file: {str(e)}")
+            return {"photos": [], "error": str(e)}
+
+    return {"photos": [], "status": "not_found"}
+
+
+@app.get("/api/product/{product_id}")
+async def get_product_data(product_id: int):
+    """Check for product data including characteristics"""
+    # 1. Check direct API first
+    api_data = await _fetch_direct_api(product_id)
+    if api_data:
+        return api_data
+
+    # 2. Check if there's a recently saved file
+    product_file = get_scrapy_data_path(f"product_{product_id}_*.json")
+    recent_files = sorted(glob.glob(product_file), key=os.path.getmtime, reverse=True)
+
+    if recent_files:
+        try:
+            with open(recent_files[0], "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data[0] if isinstance(data, list) else data
+        except Exception as e:
+            logger.error(f"Error reading product file: {str(e)}")
+
+    return {"status": "not_found"}
+
+
+@app.post("/analyze-product")
+async def analyze_product(data: dict):
+    try:
+        PROMPT_TEMPLATE = """
+        Проанализируй товар для интернет-магазина Wildberries. 
+        Ты - опытный продавец-консультант, который помогает покупателям сделать выбор.
+        Ответ должен быть менее 300 символов!
+
+        Вот данные о товаре:
+        Название: {name}
+        Бренд: {brand}
+        Описание: {description}
+        Цена: {price} ₽
+        Рейтинг: {rating} (отзывов: {reviews_count})
+        Артикул: {vendor_code}
+
+        Характеристики:
+        {specs}
+
+        Сделай анализ по следующей структуре:
+        1. Краткое описание товара (1 предложения)
+        2. Основные преимущества (1-2 пунктов)
+        3. На что обратить внимание (1 потенциальных недостатка или особенности)
+        4. Общий вывод и рекомендация (стоит ли покупать)
+
+        Будь кратким, но информативным. Пиши на русском языке. 
+        Используй маркированные списки для удобства чтения.
+        Ответ должен быть менее 300 символов!
+        """
+        # 1. Безопасное формирование спецификаций
+        specs = []
+        for opt in data.get('options', []):
+            try:
+                group = str(opt.get('group', '')).strip()
+                name = str(opt.get('name', '')).strip()
+                value = str(opt.get('value', '')).strip()
+                if name and value:
+                    specs.append(f"- {group} {name}: {value}")
+            except Exception as e:
+                logger.warning(f"Ошибка обработки характеристики: {opt} - {str(e)}")
+
+        specs_str = "\n".join(specs) if specs else "Нет характеристик"
+
+        # 2. Безопасное форматирование цены
+        try:
+            price = int(float(data.get('price', 0)))
+            price_str = f"{price} ₽"
+        except:
+            price_str = "Нет данных"
+
+        # 3. Формирование промпта с защитой от ошибок
+        prompt = PROMPT_TEMPLATE.format(
+            name=str(data.get('name', 'Не указано')).replace('\n', ' ').strip(),
+            brand=str(data.get('brand', 'Не указан')).replace('\n', ' ').strip(),
+            description=str(data.get('description', 'Нет описания')).replace('\n', ' ').strip(),
+            price=price_str,
+            rating=str(data.get('rating', 'Нет рейтинга')),
+            reviews_count=str(data.get('reviews_count', '0')),
+            vendor_code=str(data.get('vendor_code', 'Нет артикула')),
+            specs=specs_str
+        )
+
+        # 2. Запрос к Mistral с таймаутом
+        async with httpx.AsyncClient() as client:
+            logger.info("3/4: Отправка запроса к Mistral API...")
+            response = await client.post(
+                "https://api.mistral.ai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {'KhI0YjFOxFbXlPKeoVCxCqu1yhYYBxRz'}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "mistral-tiny",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.7,
+                    "max_tokens": 1000
+                },
+                timeout=30.0  # Увеличенный таймаут
+            )
+
+            logger.info(f"4/4: Получен ответ {response.status_code}")
+
+            if response.status_code != 200:
+                error_msg = f"Mistral API error: {response.text}"
+                logger.error(error_msg)
+                raise HTTPException(status_code=502, detail=error_msg)
+
+            result = response.json()
+            if not result.get('choices'):
+                logger.error(f"Неожиданный формат ответа: {result}")
+                raise HTTPException(status_code=502, detail="Неверный формат ответа от Mistral")
+
+            content = result['choices'][0]['message']['content'].strip()
+            if not content:
+                raise HTTPException(status_code=502, detail="Пустой ответ от Mistral")
+
+            return {"analysis": content}
+
+    except httpx.TimeoutException:
+        logger.error("Таймаут при запросе к Mistral API")
+        raise HTTPException(status_code=504, detail="Таймаут запроса к ИИ")
+    except Exception as e:
+        logger.error(f"Неожиданная ошибка: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
