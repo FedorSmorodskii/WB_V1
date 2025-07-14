@@ -30,8 +30,6 @@ FEEDS = {
     }
 }
 
-# Настройки кеширования
-HTTPCACHE_ENABLED = False
 
 # Настройки логирования
 LOG_LEVEL = 'DEBUG'
@@ -53,11 +51,7 @@ ITEM_PIPELINES = {
 
 # Настройки для изображений
 IMAGES_STORE = str(PROJECT_ROOT / 'scrapy_data' / 'photos')
-IMAGES_THUMBS = {
-    'small': (246, 328),
-    'medium': (516, 688),
-    'large': (800, 1066),
-}
+
 
 # Создаем директории при загрузке настроек
 (PROJECT_ROOT / 'scrapy_data').mkdir(exist_ok=True)

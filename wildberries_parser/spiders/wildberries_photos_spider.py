@@ -19,7 +19,7 @@ class WildberriesProductPhotosSpider(scrapy.Spider):
         'ITEM_PIPELINES': {
             'wildberries_parser.pipelines.WildberriesPipeline': 300,
         },
-        'CONCURRENT_REQUESTS': 16,  # Оптимальное количество параллельных запросов
+        'CONCURRENT_REQUESTS': 30,  # Оптимальное количество параллельных запросов
         'DOWNLOAD_DELAY': 0.1,  # Небольшая задержка между запросами
     }
 

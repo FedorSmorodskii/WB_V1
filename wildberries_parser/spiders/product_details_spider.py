@@ -62,7 +62,6 @@ class WildberriesProductDetailsSpider(scrapy.Spider):
 
         except Exception as e:
             self.logger.error(f"Failed to parse details for {product_id}: {str(e)}")
-            yield self._create_error_item(product_id, str(e))
 
     def _create_item(self, product_id, data):
         item = WildberriesProductDetailsItem()
@@ -80,14 +79,3 @@ class WildberriesProductDetailsSpider(scrapy.Spider):
             item['imt_id'] = f"temp_{product_id}"
 
         return item
-
-    def _create_error_item(self, product_id, error_msg):
-        item = WildberriesProductDetailsItem()
-        item['product_id'] = product_id
-        item['error'] = error_msg
-        return item
-
-    def errback(self, failure):
-        product_id = failure.request.meta['product_id']
-        self.logger.error(f"Request failed for {product_id}: {str(failure.value)}")
-        yield self._create_error_item(product_id, str(failure.value))

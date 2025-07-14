@@ -10,8 +10,8 @@ class BaseSpider(scrapy.Spider):
         'RETRY_TIMES': 3,
         'RETRY_HTTP_CODES': [500, 502, 503, 504, 408, 429],
         'DOWNLOAD_TIMEOUT': 15,
-        'CONCURRENT_REQUESTS': 4,
-        'DOWNLOAD_DELAY': 1,
+        'CONCURRENT_REQUESTS': 20,
+        'DOWNLOAD_DELAY': 0.1,
         'USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
 

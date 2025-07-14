@@ -32,10 +32,7 @@ class WildberriesProductDetailsItem(scrapy.Item):
     contents = scrapy.Field()
     full_colors = scrapy.Field()
     selling = scrapy.Field()
-    media = scrapy.Field()
-    data = scrapy.Field()
-    grouped_options = scrapy.Field()
-    timestamp = scrapy.Field()
+
 
 
 class WildberriesProductPhotosItem(scrapy.Item):

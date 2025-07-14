@@ -1,0 +1,13 @@
+version: '3.4'  # Обновленная версия
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app  # Критически важно!
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
