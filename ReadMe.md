@@ -1,5 +1,5 @@
 
-# Wildberries Parser API
+# Wildberries Parser API V1.2
 
 Проект представляет собой RESTful API для парсинга товаров с маркетплейса Wildberries с возможностью фильтрации по различным параметрам. API построен на FastAPI и использует Scrapy для сбора данных.
 
